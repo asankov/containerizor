@@ -5,16 +5,25 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
+
+type application struct {
+	log *log.Logger
+}
 
 func main() {
 	port := flag.Int("port", 4000, "port on which the application is exposed")
 	flag.Parse()
 
+	app := &application{
+		log: log.New(os.Stdout, "", log.Ldate),
+	}
+
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/containers", listContainers)
-	mux.HandleFunc("/containers/create", createContainer)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/containers", app.listContainers)
+	mux.HandleFunc("/containers/create", app.createContainer)
 
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))

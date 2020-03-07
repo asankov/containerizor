@@ -3,12 +3,11 @@ package main
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 )
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 	}
@@ -20,19 +19,19 @@ func home(w http.ResponseWriter, r *http.Request) {
 
 	t, err := template.ParseFiles(templates...)
 	if err != nil {
-		log.Println(err.Error())
+		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
 	err = t.Execute(w, nil)
 	if err != nil {
-		log.Println(err.Error())
+		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
 }
 
-func listContainers(w http.ResponseWriter, r *http.Request) {
+func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
 	idString := r.URL.Query().Get("id")
 	if idString == "" {
 		fmt.Fprintln(w, "Listing containers...")
@@ -48,7 +47,7 @@ func listContainers(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Showing container with ID %d", id)
 }
 
-func createContainer(w http.ResponseWriter, r *http.Request) {
+func (app *application) createContainer(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "Method Now Allowed", 405)

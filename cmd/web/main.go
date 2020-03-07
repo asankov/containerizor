@@ -20,17 +20,9 @@ func main() {
 		log: log.New(os.Stdout, "", log.Ldate),
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/containers", app.listContainers)
-	mux.HandleFunc("/containers/create", app.createContainer)
-
-	fileServer := http.FileServer(http.Dir("./ui/static"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
-
 	srv := http.Server{
 		Addr:    fmt.Sprintf(":%d", *port),
-		Handler: mux,
+		Handler: app.routes(),
 	}
 	log.Printf("Listening on port %d", *port)
 	log.Fatal(srv.ListenAndServe())

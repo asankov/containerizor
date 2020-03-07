@@ -12,23 +12,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
 
-	templates := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-	}
-
-	t, err := template.ParseFiles(templates...)
-	if err != nil {
-		app.log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
-
-	err = t.Execute(w, nil)
-	if err != nil {
-		app.log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-	}
+	app.serveTemplate(w, "./ui/html/home.page.tmpl", "./ui/html/base.layout.tmpl")
 }
 
 func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
@@ -49,24 +33,7 @@ func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		templates := []string{
-			"./ui/html/start.page.tmpl",
-			"./ui/html/base.layout.tmpl",
-		}
-
-		t, err := template.ParseFiles(templates...)
-		if err != nil {
-			app.log.Println(err.Error())
-			http.Error(w, "Internal Server Error", 500)
-			return
-		}
-
-		err = t.Execute(w, nil)
-		if err != nil {
-			app.log.Println(err.Error())
-			http.Error(w, "Internal Server Error", 500)
-			return
-		}
+		app.serveTemplate(w, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
 		return
 	}
 	if r.Method != http.MethodPost {
@@ -76,4 +43,19 @@ func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintln(w, "Creating a new container...")
+}
+
+func (app *application) serveTemplate(w http.ResponseWriter, templates ...string) {
+	t, err := template.ParseFiles(templates...)
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	err = t.Execute(w, nil)
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+	}
 }

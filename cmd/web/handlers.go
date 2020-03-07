@@ -5,9 +5,6 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
-
-	"github.com/asankov/containerizor/pkg/containers"
-	"github.com/docker/docker/client"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -41,19 +38,18 @@ func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
+		w.Header().Add("Allow", http.MethodGet)
 		http.Error(w, "Method Now Allowed", 405)
 		return
 	}
 
-	cl, err := client.NewEnvClient()
-	if err != nil {
-		app.log.Println(err.Error())
-		http.Error(w, "Internal Server Error", 500)
+	imageName := r.PostFormValue("image")
+	if imageName == "" {
+		http.Error(w, "Empty image", 400)
 		return
 	}
 
-	orc := containers.NewOrchestrator(cl)
-	id, err := orc.Start("asankov/httpbin:2.0")
+	id, err := app.orchestrator.Start(imageName)
 	if err != nil {
 		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)

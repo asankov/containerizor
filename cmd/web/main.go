@@ -19,6 +19,10 @@ func main() {
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
+	srv := http.Server{
+		Addr:    fmt.Sprintf(":%d", *port),
+		Handler: mux,
+	}
 	log.Printf("Listening on port %d", *port)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), mux))
+	log.Fatal(srv.ListenAndServe())
 }

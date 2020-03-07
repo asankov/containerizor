@@ -47,7 +47,28 @@ func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Showing container with ID %d", id)
 }
 
-func (app *application) createContainer(w http.ResponseWriter, r *http.Request) {
+func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodGet {
+		templates := []string{
+			"./ui/html/start.page.tmpl",
+			"./ui/html/base.layout.tmpl",
+		}
+
+		t, err := template.ParseFiles(templates...)
+		if err != nil {
+			app.log.Println(err.Error())
+			http.Error(w, "Internal Server Error", 500)
+			return
+		}
+
+		err = t.Execute(w, nil)
+		if err != nil {
+			app.log.Println(err.Error())
+			http.Error(w, "Internal Server Error", 500)
+			return
+		}
+		return
+	}
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		http.Error(w, "Method Now Allowed", 405)

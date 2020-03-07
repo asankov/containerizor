@@ -1,0 +1,9 @@
+{{template "base" .}}
+{{define "title"}}Start a Container{{end}}
+{{define "main"}}
+<form action="/containers/start" method="POST">
+    <label for="image">Image name:</label>
+    <input type="text" id="image">
+    <input type="submit" value="Go!">
+</form>
+{{end}}

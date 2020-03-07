@@ -18,6 +18,11 @@ type Orchestrator struct {
 	dockerClient client.CommonAPIClient
 }
 
+type Container struct {
+	ID    string
+	Image string
+}
+
 // NewOrchestrator creates a new Orchestrator
 // and returns a reference to that
 func NewOrchestrator(cl client.CommonAPIClient) *Orchestrator {
@@ -51,4 +56,21 @@ func (o *Orchestrator) Start(imageName string) (string, error) {
 	}
 
 	return container.ID, nil
+}
+
+func (o *Orchestrator) ListContainers() ([]*Container, error) {
+	containersResponse, err := o.dockerClient.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	containers := make([]*Container, 0, len(containersResponse))
+	for _, c := range containersResponse {
+		containers = append(containers, &Container{
+			ID:    c.ID,
+			Image: c.Image,
+		})
+	}
+
+	return containers, nil
 }

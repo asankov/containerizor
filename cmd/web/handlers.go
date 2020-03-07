@@ -4,8 +4,13 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"strconv"
+
+	"github.com/asankov/containerizor/pkg/containers"
 )
+
+type templateArgs struct {
+	Containers []*containers.Container
+}
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
@@ -16,19 +21,34 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
-	idString := r.URL.Query().Get("id")
-	if idString == "" {
-		fmt.Fprintln(w, "Listing containers...")
+	containers, err := app.orchestrator.ListContainers()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	id, err := strconv.Atoi(idString)
-	if err != nil || id < 1 {
-		http.Error(w, "Not Found", 404)
+	// if len(containers) == 0 {
+	// 	fmt.Fprintf(w, "no containers")
+	// }
+	// for _, c := range containers {
+	// 	fmt.Fprintf(w, "ID: %s, Image: %s", c.ID, c.Image)
+	// }
+
+	t, err := template.ParseFiles("./ui/html/list.page.tmpl", "./ui/html/base.layout.tmpl")
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
-	fmt.Fprintf(w, "Showing container with ID %d", id)
+	err = t.Execute(w, templateArgs{
+		Containers: containers,
+	})
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
 }
 
 func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {

@@ -1,11 +1,16 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 )
 
 func main() {
+	port := flag.Int("port", 4000, "port on which the application is exposed")
+	flag.Parse()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/containers", listContainers)
@@ -14,6 +19,6 @@ func main() {
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	log.Println("Listening on :4000")
-	log.Fatal(http.ListenAndServe(":4000", mux))
+	log.Printf("Listening on port %d", *port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), mux))
 }

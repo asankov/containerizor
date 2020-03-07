@@ -5,6 +5,9 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/asankov/containerizor/pkg/containers"
+	"github.com/docker/docker/client"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -42,7 +45,22 @@ func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintln(w, "Creating a new container...")
+	cl, err := client.NewEnvClient()
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	orc := containers.NewOrchestrator(cl)
+	id, err := orc.Start("asankov/httpbin:2.0")
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	fmt.Fprintf(w, "Started a new containers with ID %s", id)
 }
 
 func (app *application) serveTemplate(w http.ResponseWriter, templates ...string) {

@@ -1,15 +1,20 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-func (app *application) routes() *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/", app.home)
-	mux.HandleFunc("/containers", app.listContainers)
-	mux.HandleFunc("/containers/start", app.startContainer)
+	"github.com/gorilla/mux"
+)
+
+func (app *application) routes() *mux.Router {
+	router := mux.NewRouter()
+	router.HandleFunc("/", app.home).Methods(http.MethodGet)
+	router.HandleFunc("/containers", app.listContainers).Methods(http.MethodGet)
+	router.HandleFunc("/containers/start", app.startContainerIndex).Methods(http.MethodGet)
+	router.HandleFunc("/containers/start", app.startContainer).Methods(http.MethodPost)
 
 	fileServer := http.FileServer(http.Dir("./ui/static"))
-	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", fileServer))
 
-	return mux
+	return router
 }

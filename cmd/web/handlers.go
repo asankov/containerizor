@@ -44,11 +44,11 @@ func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (app *application) startContainerIndex(w http.ResponseWriter, r *http.Request) {
+	app.serveTemplate(w, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
+}
+
 func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		app.serveTemplate(w, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
-		return
-	}
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		w.Header().Add("Allow", http.MethodGet)

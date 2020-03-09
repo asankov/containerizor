@@ -49,21 +49,14 @@ func (app *application) startContainerIndex(w http.ResponseWriter, r *http.Reque
 	app.serveTemplate(w, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
 }
 
-func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		w.Header().Add("Allow", http.MethodGet)
-		http.Error(w, "Method Now Allowed", 405)
-		return
-	}
-
+func (app *application) startNewContainer(w http.ResponseWriter, r *http.Request) {
 	imageName := r.PostFormValue("image")
 	if imageName == "" {
 		http.Error(w, "Empty image", 400)
 		return
 	}
 
-	_, err := app.orchestrator.Start(imageName)
+	_, err := app.orchestrator.StartNewFrom(imageName)
 	if err != nil {
 		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
@@ -93,6 +86,19 @@ func (app *application) stopContainer(w http.ResponseWriter, r *http.Request) {
 	id := params["id"]
 
 	if err := app.orchestrator.StopContainer(id); err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	redirectToView(w, "/containers")
+}
+
+func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	if err := app.orchestrator.StartContainer(id); err != nil {
 		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return

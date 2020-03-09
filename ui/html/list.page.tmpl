@@ -14,9 +14,15 @@
             <td>{{.Image}}</td>
             <td>{{.ID}}</td>
             <td>
+                {{if .Running}}
                 <form action="/containers/{{.ID}}/stop" method="POST">
-                    <input type="submit" value="Stop">
+                    <input style="background-color: red;" type="submit" value="Stop">
                 </form>
+                {{else}}
+                <form action="/containers/{{.ID}}/start" method="POST">
+                    <input type="submit" value="start">
+                </form>
+                {{end}}
             </td>
         </tr>
         {{end}}

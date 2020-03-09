@@ -27,13 +27,6 @@ func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if len(containers) == 0 {
-	// 	fmt.Fprintf(w, "no containers")
-	// }
-	// for _, c := range containers {
-	// 	fmt.Fprintf(w, "ID: %s, Image: %s", c.ID, c.Image)
-	// }
-
 	t, err := template.ParseFiles("./ui/html/list.page.tmpl", "./ui/html/base.layout.tmpl")
 	if err != nil {
 		app.log.Println(err.Error())

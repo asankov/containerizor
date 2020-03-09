@@ -1,0 +1,14 @@
+{{template "base" .}}
+{{define "title"}}Exec into a Container{{end}}
+{{define "main"}}
+<form action='/containers/{{.ID}}/exec' method='POST'>
+    <h1>Exec into container {{.ID}}</h1>
+    <div>
+        <label>Command:</label>
+        <input type='text' name='command'>
+    </div>
+    <div>
+        <input type='submit' value='Exec command'>
+    </div>
+</form>
+{{end}}

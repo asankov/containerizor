@@ -7,23 +7,31 @@
         <tr>
             <th>Image</th>
             <th>ID</th>
-            <th></th>
+            <th colspan="2"></th>
         </tr>
         {{range .Containers}}
         <tr>
             <td>{{.Image}}</td>
             <td>{{.ID}}</td>
+            {{if .Running}}
             <td>
-                {{if .Running}}
                 <form action="/containers/{{.ID}}/stop" method="POST">
                     <input style="background-color: red;" type="submit" value="Stop">
                 </form>
-                {{else}}
+            </td>
+            <td>
+                <form action="/containers/{{.ID}}/exec" method="GET">
+                    <input type="submit" value="exec">
+                </form>
+            </td>
+            {{else}}
+            <td>
                 <form action="/containers/{{.ID}}/start" method="POST">
                     <input type="submit" value="start">
                 </form>
-                {{end}}
             </td>
+            <td></td>
+            {{end}}
         </tr>
         {{end}}
     </table>

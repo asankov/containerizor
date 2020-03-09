@@ -18,7 +18,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
 
-	app.serveTemplate(w, "./ui/html/home.page.tmpl", "./ui/html/base.layout.tmpl")
+	app.serveTemplate(w, nil, "./ui/html/home.page.tmpl", "./ui/html/base.layout.tmpl")
 }
 
 func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
@@ -46,7 +46,7 @@ func (app *application) listContainers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) startContainerIndex(w http.ResponseWriter, r *http.Request) {
-	app.serveTemplate(w, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
+	app.serveTemplate(w, nil, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
 }
 
 func (app *application) startNewContainer(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func (app *application) startNewContainer(w http.ResponseWriter, r *http.Request
 	redirectToView(w, "/containers")
 }
 
-func (app *application) serveTemplate(w http.ResponseWriter, templates ...string) {
+func (app *application) serveTemplate(w http.ResponseWriter, data interface{}, templates ...string) {
 	t, err := template.ParseFiles(templates...)
 	if err != nil {
 		app.log.Println(err.Error())
@@ -74,7 +74,7 @@ func (app *application) serveTemplate(w http.ResponseWriter, templates ...string
 		return
 	}
 
-	err = t.Execute(w, nil)
+	err = t.Execute(w, data)
 	if err != nil {
 		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
@@ -105,6 +105,13 @@ func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redirectToView(w, "/containers")
+}
+
+func (app *application) execContainerView(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	app.serveTemplate(w, struct{ ID string }{ID: id}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
 }
 
 func redirectToView(w http.ResponseWriter, url string) {

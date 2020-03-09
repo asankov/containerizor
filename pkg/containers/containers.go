@@ -3,6 +3,7 @@ package containers
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/docker/docker/client"
 
@@ -73,4 +74,13 @@ func (o *Orchestrator) ListContainers() ([]*Container, error) {
 	}
 
 	return containers, nil
+}
+
+func (o *Orchestrator) StopContainer(id string) error {
+	dur := 10 * time.Second
+	if err := o.dockerClient.ContainerStop(context.Background(), id, &dur); err != nil {
+		return fmt.Errorf("error while stopping container: %w", err)
+	}
+
+	return nil
 }

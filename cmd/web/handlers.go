@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
+
+	"github.com/gorilla/mux"
 
 	"github.com/asankov/containerizor/pkg/containers"
 )
@@ -62,14 +63,14 @@ func (app *application) startContainer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := app.orchestrator.Start(imageName)
+	_, err := app.orchestrator.Start(imageName)
 	if err != nil {
 		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
 	}
 
-	fmt.Fprintf(w, "Started a new containers with ID %s", id)
+	redirectToView(w, "/containers")
 }
 
 func (app *application) serveTemplate(w http.ResponseWriter, templates ...string) {
@@ -85,4 +86,22 @@ func (app *application) serveTemplate(w http.ResponseWriter, templates ...string
 		app.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}
+}
+
+func (app *application) stopContainer(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id := params["id"]
+
+	if err := app.orchestrator.StopContainer(id); err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	redirectToView(w, "/containers")
+}
+
+func redirectToView(w http.ResponseWriter, url string) {
+	w.Header().Add("Location", url)
+	w.WriteHeader(http.StatusTemporaryRedirect)
 }

@@ -1,11 +1,15 @@
 package containers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -23,6 +27,12 @@ type Container struct {
 	ID      string
 	Image   string
 	Running bool
+}
+
+type ExecResult struct {
+	StdOut   string
+	StdErr   string
+	ExitCode int
 }
 
 // NewOrchestrator creates a new Orchestrator
@@ -92,8 +102,71 @@ func (o *Orchestrator) StopContainer(id string) error {
 
 func (o *Orchestrator) StartContainer(id string) error {
 	if err := o.dockerClient.ContainerStart(context.Background(), id, types.ContainerStartOptions{}); err != nil {
-		return fmt.Errorf("error while starting container %d: %w", id, err)
+		return fmt.Errorf("error while starting container %s: %w", id, err)
 	}
 
 	return nil
+}
+
+func (o *Orchestrator) ExecIntoContainer(id, command string) (*ExecResult, error) {
+	execID, err := o.dockerClient.ContainerExecCreate(context.Background(), id, types.ExecConfig{
+		AttachStderr: true,
+		AttachStdout: true,
+		Cmd:          strings.Split(command, " "),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error while creating exec: %w", err)
+	}
+
+	return o.inspectExecResp(context.Background(), command, execID.ID)
+}
+
+// this function is copied from this SO thread:
+// https://stackoverflow.com/questions/52774830/docker-exec-command-from-golang-api
+func (o *Orchestrator) inspectExecResp(ctx context.Context, command, id string) (*ExecResult, error) {
+	resp, err := o.dockerClient.ContainerExecAttach(ctx, id, types.ExecConfig{})
+	if err != nil {
+		return nil, fmt.Errorf("error while attaching to exec: %w", err)
+	}
+	defer resp.Close()
+
+	// read the output
+	var outBuf, errBuf bytes.Buffer
+	outputDone := make(chan error)
+
+	go func() {
+		// StdCopy demultiplexes the stream into two buffers
+		_, err = stdcopy.StdCopy(&outBuf, &errBuf, resp.Reader)
+		outputDone <- err
+	}()
+
+	select {
+	case err := <-outputDone:
+		if err != nil {
+			return nil, err
+		}
+		break
+
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+
+	stdout, err := ioutil.ReadAll(&outBuf)
+	if err != nil {
+		return nil, err
+	}
+	stderr, err := ioutil.ReadAll(&errBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := o.dockerClient.ContainerExecInspect(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return &ExecResult{
+		StdOut:   string(stdout),
+		StdErr:   string(stderr),
+		ExitCode: res.ExitCode,
+	}, nil
 }

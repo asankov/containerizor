@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 
@@ -112,6 +113,28 @@ func (app *application) execContainerView(w http.ResponseWriter, r *http.Request
 	id := params["id"]
 
 	app.serveTemplate(w, struct{ ID string }{ID: id}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
+}
+
+func (app *application) execContainer(w http.ResponseWriter, r *http.Request) {
+	command := r.PostFormValue("command")
+	if command == "" {
+		http.Error(w, "Command cannot be empty", 400)
+	}
+
+	params := mux.Vars(r)
+	id := params["id"]
+
+	execResult, err := app.orchestrator.ExecIntoContainer(id, command)
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "Internal Server Error", 500)
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf("%#v", execResult)))
+
+	// TODO: redirect to container/:id/logs once that is implemented
+	// redirectToView(w, "/")
 }
 
 func redirectToView(w http.ResponseWriter, url string) {

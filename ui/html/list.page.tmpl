@@ -1,0 +1,24 @@
+{{template "base" .}}
+{{define "title"}}My Containers{{end}}
+{{define "main"}}
+<ul>
+    {{if .Containers}}
+    <table>
+        <tr>
+            <th>Image</th>
+            <th>ID</th>
+            <th>Stop</th>
+        </tr>
+        {{range .Containers}}
+        <tr>
+            <td>{{.Image}}</td>
+            <td>{{.ID}}</td>
+            <td><button style="color: red;" class="stop-button"> Stop </button></td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
+    <p>You have no running containers.</p>
+    {{end}}
+</ul>
+{{end}}

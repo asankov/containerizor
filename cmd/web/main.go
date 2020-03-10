@@ -11,6 +11,7 @@ import (
 
 	"github.com/asankov/containerizor/internal/db/postgres"
 
+	// to register PostreSQL driver
 	_ "github.com/lib/pq"
 
 	"github.com/asankov/containerizor/pkg/containers"

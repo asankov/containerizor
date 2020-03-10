@@ -12,12 +12,16 @@
 
 <body>
     <header>
-        <h1><a href='/'>Containerizor</a></h1>
+        <h1><a href='/containers'>Containerizor</a></h1>
     </header>
     <nav>
-        <a href='/'>Home</a>
-        <a href='/containers'>My Containers</a>
-        <a href='/containers/start'>Start a Container</a>
+        <div>
+            <a href='/containers'>Home</a>
+            <a href='/containers/start'>Start a Container</a>
+        </div>
+        <div>
+            <a href='/users/create'>Signup</a>
+        </div>
     </nav>
     <main>
         {{template "main" .}}

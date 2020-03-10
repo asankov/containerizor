@@ -5,8 +5,9 @@ import (
 )
 
 type Database interface {
-	CreateUser(user *models.User) (*models.User, error)
+	CreateUser(user *models.User) error
 	GetUserByID(id int) (*models.User, error)
-	GetUserByUsernameAndPassword(username, password string) (*models.User, error)
+	GetUserByUsername(username string) (*models.User, error)
+
 	Close()
 }

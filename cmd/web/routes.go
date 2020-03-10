@@ -18,6 +18,9 @@ func (app *application) routes() *mux.Router {
 	router.HandleFunc("/containers/{id}/exec", app.execContainerView).Methods(http.MethodGet)
 	router.HandleFunc("/containers/{id}/exec", app.execContainer).Methods(http.MethodPost)
 
+	router.HandleFunc("/users/create", app.createUserView).Methods(http.MethodGet)
+	router.HandleFunc("/users/create", app.createUser).Methods(http.MethodPost)
+
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", fileServer))
 

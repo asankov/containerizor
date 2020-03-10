@@ -11,4 +11,15 @@
         <input type='submit' value='Exec command'>
     </div>
 </form>
+{{if .Result}}
+<h1>Exit code of command `{{.Cmd}}` is {{.Result.ExitCode}}</h1>
+{{if .Result.StdOut}}
+<h3>Stdout:</h3>
+<p>{{.Result.StdOut}}</p>
+{{end}}
+{{if .Result.StdErr}}
+<h3>Stderr:</h3>
+<p>{{.Result.StdErr}}</p>
+{{end}}
+{{end}}
 {{end}}

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 
@@ -112,7 +111,13 @@ func (app *application) execContainerView(w http.ResponseWriter, r *http.Request
 	params := mux.Vars(r)
 	id := params["id"]
 
-	app.serveTemplate(w, struct{ ID string }{ID: id}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
+	app.serveTemplate(w, execContainerViewResult{ID: id}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
+}
+
+type execContainerViewResult struct {
+	ID     string
+	Result *containers.ExecResult
+	Cmd    string
 }
 
 func (app *application) execContainer(w http.ResponseWriter, r *http.Request) {
@@ -131,10 +136,7 @@ func (app *application) execContainer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("%#v", execResult)))
-
-	// TODO: redirect to container/:id/logs once that is implemented
-	// redirectToView(w, "/")
+	app.serveTemplate(w, execContainerViewResult{ID: id, Result: execResult, Cmd: command}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
 }
 
 func redirectToView(w http.ResponseWriter, url string) {

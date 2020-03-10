@@ -23,16 +23,12 @@ type application struct {
 	db           db.Database
 }
 
-const (
-	host     = "localhost"
-	dbPort   = 5432
-	user     = "antonsankov"
-	password = ""
-	dbname   = "containerizor"
-)
-
 func main() {
 	port := flag.Int("port", 4000, "port on which the application is exposed")
+	dbHost := flag.String("db_host", "localhost", "the address of the database")
+	dbPort := flag.Int("db_port", 5432, "the port of the database")
+	dbUser := flag.String("db_user", "", "the user of the database")
+	dbName := flag.String("db_name", "", "the name of the database")
 	flag.Parse()
 
 	cl, err := client.NewEnvClient()
@@ -41,7 +37,7 @@ func main() {
 	}
 
 	// TODO: password, sslmode
-	db, err := postgres.New(host, dbPort, user, dbname)
+	db, err := postgres.New(*dbHost, *dbPort, *dbUser, *dbName)
 	if err != nil {
 		panic(err)
 	}

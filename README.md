@@ -9,7 +9,8 @@ This is a sample web service, whose purpose is to manage Docker containers. 'Man
 # Architecture
 
 Currently, the service is a monolith, one service that does everything. Put into picture it looks like this: 
-TODO add picture
+
+![](./docs/architecture.png)
 
 The web UI of the service is powered by Go templates, and the actions executed by the user are POST request powered by HTML forms.
 The reasons I did it that way are two:
@@ -23,6 +24,8 @@ A login service to store user identity, ideally a OIDC provider, which would all
 A container back-end service, that will do the actual managing of containers.
 
 The higher point of it all may be the option to add more nodes on which to schedule containers (basically implementing Kubernetes).
+
+![](./docs/future_architecture.png)
 
 # Multi-tenancy
 

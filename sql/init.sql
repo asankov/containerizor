@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS USERS (
   id SERIAL PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
-  passwordHash TEXT,
+  passwordHash TEXT
 );

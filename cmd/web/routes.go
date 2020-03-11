@@ -20,6 +20,8 @@ func (app *application) routes() *mux.Router {
 
 	router.HandleFunc("/users/create", app.createUserView).Methods(http.MethodGet)
 	router.HandleFunc("/users/create", app.createUser).Methods(http.MethodPost)
+	router.HandleFunc("/users/login", app.loginView).Methods(http.MethodGet)
+	router.HandleFunc("/users/login", app.login).Methods(http.MethodPost)
 
 	fileServer := http.FileServer(http.Dir("./ui/static"))
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", fileServer))

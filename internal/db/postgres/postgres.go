@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/asankov/containerizor/pkg/models"
@@ -36,7 +37,19 @@ func (db *Database) GetUserByID(id int) (*models.User, error) {
 	return nil, nil
 }
 func (db *Database) GetUserByUsername(username string) (*models.User, error) {
-	return nil, nil
+	user := new(models.User)
+
+	err := db.db.
+		QueryRow("SELECT * FROM USERS U WHERE U.USERNAME = $1", username).
+		Scan(&user.ID, &user.Username, &user.HashedPassword)
+	if err != nil {
+		// TODO: maybe return proper error here
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return user, nil
 }
 func (db *Database) Close() {
 	db.Close()

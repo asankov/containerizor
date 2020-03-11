@@ -48,6 +48,41 @@ func (app *application) createUser(w http.ResponseWriter, r *http.Request) {
 	redirectToView(w, "/")
 }
 
+func (app *application) login(w http.ResponseWriter, r *http.Request) {
+	username := r.PostFormValue("username")
+	if username == "" {
+		http.Error(w, "username cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	password := r.PostFormValue("password")
+	if password == "" {
+		http.Error(w, "password cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	user, err := app.db.GetUserByUsername(username)
+	if err != nil {
+		app.log.Println(err.Error())
+		http.Error(w, "internal error", 500)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password))
+	if user == nil || err != nil {
+		http.Error(w, "username or password are wrong", 400)
+		return
+	}
+
+	w.Header().Add("Set-Cookie", "token=TODO")
+	app.serveTemplate(w, nil, "./ui/html/list.page.tmpl", "./ui/html/base.layout.tmpl")
+
+}
+
+func (app *application) loginView(w http.ResponseWriter, r *http.Request) {
+	app.serveTemplate(w, nil, "./ui/html/login.page.tmpl", "./ui/html/base.layout.tmpl")
+}
+
 func (app *application) createUserView(w http.ResponseWriter, r *http.Request) {
 	app.serveTemplate(w, nil, "./ui/html/signup.page.tmpl", "./ui/html/base.layout.tmpl")
 }

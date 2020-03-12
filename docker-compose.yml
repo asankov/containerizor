@@ -1,0 +1,25 @@
+version: "3.7"
+services:
+  containerizor:
+    depends_on: 
+      - db
+    image: asankov/containerizor:1.0
+    ports:
+      - "6379"
+    environment:
+      DB_HOST: 'db'
+      DB_PORT: 5432
+      DB_USER: 'admin'
+      DB_PASS: 'password'
+      DB_NAME: 'containerizor'
+  db:
+    image: postgres:9.4
+    environment:
+      POSTGRES_USER: 'admin'
+      POSTGRES_PASSWORD: 'password'
+      POSTGRES_DB: 'containerizor'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

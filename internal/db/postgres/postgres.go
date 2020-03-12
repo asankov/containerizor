@@ -58,9 +58,14 @@ func (db *Database) Close() {
 // New connects to a PostgreSQL instance with the
 // given parameters and returns the connection,
 // or an error if such occured.
-func New(host string, port int, user string, dbName string) (*Database, error) {
-	// TODO: password, sslmode
-	db, err := sql.Open("postgres", fmt.Sprintf("host=%s port=%d user=%s dbname=%s sslmode=disable", host, port, user, dbName))
+func New(host string, port int, user string, dbName string, dbPass string) (*Database, error) {
+	connString := fmt.Sprintf("host=%s port=%d user=%s dbname=%s", host, port, user, dbName)
+	if dbPass != "" {
+		connString += fmt.Sprintf(" password=%s", dbPass)
+	}
+	// apparantly, this must be the last arg to be passed
+	connString += " sslmode=disable"
+	db, err := sql.Open("postgres", connString)
 	if err != nil {
 		return nil, err
 	}

@@ -42,3 +42,15 @@ The service at this point has a lot of known issues:
 - minimal error handling. For instance, if you try to register an existing user name, you will be redirected to a blank page that says "username already exists" (who cares about UX, right)
 - the multi-tenancy is still not working. You can register and login an user, but the cookie that will be returned to you looks like this: `token: TODO`
 - that said, anyone with access to the system can start, stop and exec in anyone else's containers (again, time limitations and bad planning on my side)
+
+# How to start
+
+## Prerequisites:
+0. Run PostgreSQL
+00. Create a new database
+000. Run `sql/init.sql` into the database
+
+## Actual setup
+1. `$ go run ./cmd/web -port=<APPLICATION_PORT> -db_host=<DB_HOST> -db_port=<DB_PORT> -db_user=<DB_USER> -db_name=<DB_NAME> -db_pass=<DB_PASS(optional)>`
+
+NOTE: The service has a Docker container, and I tried making the setup a bit easier by adding a `docker-compose.yml` which will handle the above steps for you, but I was short on time. I think that I will get this up and running in a few days when I have the time to debug all the nasty problems I get while trying to run it.

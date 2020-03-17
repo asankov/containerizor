@@ -9,6 +9,15 @@ ADD . /app
 # download all dependencies to local cache
 RUN go mod download
 
+RUN apt-get update
+
+RUN apt-get install apt-transport-https ca-certificates curl
+
+RUN curl -fsSl https://download.docker.com/linux/debian/gpg | apt-get key add -
+
+
+RUN apt-get install docker-ce docker-ce-cli containerd.io
+
 # build the executable binary
 RUN go build -o app/cmd/web/app github.com/asankov/containerizor/cmd/web
 

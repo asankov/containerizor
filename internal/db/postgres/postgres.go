@@ -1,9 +1,12 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/asankov/containerizor/pkg/models"
 
@@ -59,23 +62,46 @@ func (db *Database) Close() {
 // given parameters and returns the connection,
 // or an error if such occured.
 func New(host string, port int, user string, dbName string, dbPass string) (*Database, error) {
-	connString := fmt.Sprintf("host=%s port=%d user=%s dbname=%s", host, port, user, dbName)
+	connString := fmt.Sprintf("host=%s port=%d user=%s", host, port, user)
 	if dbPass != "" {
 		connString += fmt.Sprintf(" password=%s", dbPass)
 	}
 	// apparantly, this must be the last arg to be passed
-	connString += " sslmode=disable"
-	db, err := sql.Open("postgres", connString)
+	connString += fmt.Sprintf(" dbname=%s sslmode=disable", dbName)
+	timeoutCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	db, err := connect(timeoutCtx, connString)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("connect error: %w", err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		return nil, err
+	if err := db.Ping(); err != nil {
+		return nil, fmt.Errorf("ping error: %w", err)
 	}
 
 	return &Database{
 		db: db,
 	}, err
+}
+
+func connect(ctx context.Context, connString string) (*sql.DB, error) {
+	for {
+		db, err := sql.Open("postgres", connString)
+		if err != nil {
+			return nil, err
+		}
+		if err := db.Ping(); err == nil {
+			return db, nil
+		}
+
+		log.Printf("err: %v", err)
+		select {
+		case <-time.After(1 * time.Second):
+			log.Println("retrying to connect to db")
+		case <-ctx.Done():
+			log.Println("db connect timeout")
+			return nil, errors.New("db connect timeout")
+		}
+	}
 }

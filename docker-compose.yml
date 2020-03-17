@@ -3,9 +3,9 @@ services:
   containerizor:
     depends_on: 
       - db
-    image: asankov/containerizor:1.0
+    image: asankov/containerizor:1.5
     ports:
-      - "6379"
+      - "4000:4000"
     environment:
       DB_HOST: 'db'
       DB_PORT: 5432
@@ -13,11 +13,12 @@ services:
       DB_PASS: 'password'
       DB_NAME: 'containerizor'
   db:
-    image: postgres:9.4
+    image: postgres
     environment:
       POSTGRES_USER: 'admin'
       POSTGRES_PASSWORD: 'password'
       POSTGRES_DB: 'containerizor'
+      POSTGRES_HOST_AUTH_METHOD: 'password'
     volumes:
       - db-data:/var/lib/postgresql/data
 

@@ -17,12 +17,11 @@ type Database struct {
 
 func (db *Database) CreateUser(user *models.User) error {
 	// TODO: do this in one transaction
-	// BIGGER TODO: fix sql injection
-	sql := fmt.Sprintf("INSERT INTO USERS(username, passwordHash) VALUES ('%s', '%s');", user.Username, user.HashedPassword)
-	if _, err := db.db.Exec(sql); err != nil {
+	if _, err := db.db.Exec(`INSERT INTO USERS(username, passwordHash) VALUES ($1, $2);`, user.Username, user.HashedPassword); err != nil {
 		return err
 	}
-	sql = fmt.Sprintf("CREATE SCHEMA %s;", user.Username)
+	// the PostgreSQL driver refuses to format this, so we must go with fmt.Sprintf
+	sql := fmt.Sprintf("CREATE SCHEMA %s;", user.Username)
 	if _, err := db.db.Exec(sql); err != nil {
 		return err
 	}

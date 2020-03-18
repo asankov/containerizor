@@ -1,9 +1,11 @@
 package postgres
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
+	"text/template"
 
 	"github.com/asankov/containerizor/pkg/models"
 
@@ -20,18 +22,31 @@ func (db *Database) CreateUser(user *models.User) error {
 	if _, err := db.db.Exec(`INSERT INTO USERS(username, passwordHash) VALUES ($1, $2);`, user.Username, user.HashedPassword); err != nil {
 		return err
 	}
-	// the PostgreSQL driver refuses to format this, so we must go with fmt.Sprintf
-	sql := fmt.Sprintf("CREATE SCHEMA %s;", user.Username)
-	if _, err := db.db.Exec(sql); err != nil {
+
+	return db.createSchemaForUser(user)
+}
+
+func (db *Database) createSchemaForUser(user *models.User) error {
+	// TODO: don't parse this every time the function is invoked
+	t, err := template.ParseFiles("./sql/user_tables.sql.tmpl")
+	if err != nil {
 		return err
 	}
-	// TODO: this could be template
-	sql = fmt.Sprintf(`CREATE TABLE %s.CONTAINERS (id TEXT)`, user.Username)
+	var b bytes.Buffer
+	if err = t.Execute(&b, struct {
+		Username string
+	}{
+		Username: user.Username,
+	}); err != nil {
+		return err
+	}
+	sql := b.String()
 	if _, err := db.db.Exec(sql); err != nil {
 		return err
 	}
 	return nil
 }
+
 func (db *Database) GetUserByID(id int) (*models.User, error) {
 	return nil, nil
 }
@@ -69,8 +84,7 @@ func New(host string, port int, user string, dbName string, dbPass string) (*Dat
 		return nil, err
 	}
 
-	err = db.Ping()
-	if err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 

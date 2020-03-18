@@ -18,7 +18,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-type application struct {
+type server struct {
 	log          *log.Logger
 	orchestrator *containers.Orchestrator
 	db           db.Database
@@ -45,7 +45,7 @@ func main() {
 	}
 	defer db.Close()
 
-	app := &application{
+	app := &server{
 		log:          log.New(os.Stdout, "", log.Ldate),
 		orchestrator: containers.NewOrchestrator(cl),
 		db:           db,

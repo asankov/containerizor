@@ -85,6 +85,7 @@ func (app *server) handleLogin() http.HandlerFunc {
 		http.SetCookie(w, &http.Cookie{
 			Name:  "token",
 			Value: token,
+			Path:  "/",
 		})
 		app.serveTemplate(w, nil, "./ui/html/list.page.tmpl", "./ui/html/base.layout.tmpl")
 	}

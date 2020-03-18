@@ -1,16 +1,19 @@
 package main
 
 import (
+	"errors"
 	"html/template"
 	"net/http"
 
 	"github.com/gorilla/mux"
 
 	"github.com/asankov/containerizor/pkg/containers"
+	"github.com/asankov/containerizor/pkg/models"
 )
 
 type templateArgs struct {
 	Containers []*containers.Container
+	User       *models.User
 }
 
 func (srv *server) home() http.HandlerFunc {
@@ -25,6 +28,12 @@ func (srv *server) home() http.HandlerFunc {
 
 func (srv *server) handleContainersList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		usr, err := srv.userFromRequest(r)
+		if err != nil {
+			http.Error(w, "unathorized", http.StatusUnauthorized)
+			return
+		}
+
 		containers, err := srv.orchestrator.ListContainers()
 		if err != nil {
 			http.Error(w, err.Error(), 500)
@@ -40,6 +49,7 @@ func (srv *server) handleContainersList() http.HandlerFunc {
 
 		if err := t.Execute(w, templateArgs{
 			Containers: containers,
+			User:       usr,
 		}); err != nil {
 			srv.log.Println(err.Error())
 			http.Error(w, "Internal Server Error", 500)
@@ -50,7 +60,13 @@ func (srv *server) handleContainersList() http.HandlerFunc {
 
 func (srv *server) handleContainersStartView() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		srv.serveTemplate(w, nil, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
+		usr, err := srv.userFromRequest(r)
+		if err != nil {
+			http.Error(w, "unathorized", http.StatusUnauthorized)
+			return
+		}
+
+		srv.serveTemplate(w, &templateArgs{User: usr}, "./ui/html/start.page.tmpl", "./ui/html/base.layout.tmpl")
 	}
 }
 
@@ -118,10 +134,16 @@ func (srv *server) handleContainerStart() http.HandlerFunc {
 
 func (srv *server) handleContainerExecView() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		usr, err := srv.userFromRequest(r)
+		if err != nil {
+			http.Error(w, "unathorized", http.StatusUnauthorized)
+			return
+		}
+
 		params := mux.Vars(r)
 		id := params["id"]
 
-		srv.serveTemplate(w, execContainerViewResult{ID: id}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
+		srv.serveTemplate(w, execContainerViewResult{ID: id, User: usr}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
 	}
 }
 
@@ -129,10 +151,17 @@ type execContainerViewResult struct {
 	ID     string
 	Result *containers.ExecResult
 	Cmd    string
+	User   *models.User
 }
 
 func (srv *server) handleContainerExec() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		usr, err := srv.userFromRequest(r)
+		if err != nil {
+			http.Error(w, "unathorized", http.StatusUnauthorized)
+			return
+		}
+
 		command := r.PostFormValue("command")
 		if command == "" {
 			http.Error(w, "Command cannot be empty", 400)
@@ -148,11 +177,20 @@ func (srv *server) handleContainerExec() http.HandlerFunc {
 			return
 		}
 
-		srv.serveTemplate(w, execContainerViewResult{ID: id, Result: execResult, Cmd: command}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
+		srv.serveTemplate(w, execContainerViewResult{ID: id, Result: execResult, Cmd: command, User: usr}, "./ui/html/exec.page.tmpl", "./ui/html/base.layout.tmpl")
 	}
 }
 
 func redirectToView(w http.ResponseWriter, url string) {
 	w.Header().Add("Location", url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func (srv *server) userFromRequest(r *http.Request) (*models.User, error) {
+	username := r.Header.Get("user")
+	if username == "" {
+		return nil, errors.New("no user present in request")
+	}
+
+	return srv.db.GetUserByUsername(username)
 }

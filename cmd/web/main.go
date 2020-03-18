@@ -25,6 +25,12 @@ type server struct {
 }
 
 func main() {
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
 	port := flag.Int("port", 4000, "port on which the application is exposed")
 	dbHost := flag.String("db_host", "localhost", "the address of the database")
 	dbPort := flag.Int("db_port", 5432, "the port of the database")
@@ -33,21 +39,20 @@ func main() {
 	dbName := flag.String("db_name", "", "the name of the database")
 	flag.Parse()
 
-	cl, err := client.NewEnvClient()
+	dockerClient, err := client.NewEnvClient()
 	if err != nil {
-		panic(err.Error())
+		return fmt.Errorf("error while building docker client: %w", err)
 	}
 
-	// TODO: password, sslmode
+	// TODO: sslmode
 	db, err := postgres.New(*dbHost, *dbPort, *dbUser, *dbName, *dbPass)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("error while building db connection pool: %w", err)
 	}
-	defer db.Close()
 
 	app := &server{
 		log:          log.New(os.Stdout, "", log.Ldate),
-		orchestrator: containers.NewOrchestrator(cl),
+		orchestrator: containers.NewOrchestrator(dockerClient),
 		db:           db,
 	}
 
@@ -56,5 +61,9 @@ func main() {
 		Handler: app.routes(),
 	}
 	log.Printf("Listening on port %d", *port)
-	log.Fatal(srv.ListenAndServe())
+	if err := srv.ListenAndServe(); err != nil {
+		return fmt.Errorf("error while running web server: %w", err)
+	}
+
+	return nil
 }

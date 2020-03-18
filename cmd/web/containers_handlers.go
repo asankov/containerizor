@@ -38,10 +38,9 @@ func (srv *server) handleContainersList() http.HandlerFunc {
 			return
 		}
 
-		err = t.Execute(w, templateArgs{
+		if err := t.Execute(w, templateArgs{
 			Containers: containers,
-		})
-		if err != nil {
+		}); err != nil {
 			srv.log.Println(err.Error())
 			http.Error(w, "Internal Server Error", 500)
 			return
@@ -63,8 +62,7 @@ func (srv *server) handleContainersStart() http.HandlerFunc {
 			return
 		}
 
-		_, err := srv.orchestrator.StartNewFrom(imageName)
-		if err != nil {
+		if _, err := srv.orchestrator.StartNewFrom(imageName); err != nil {
 			srv.log.Println(err.Error())
 			http.Error(w, "Internal Server Error", 500)
 			return
@@ -82,8 +80,7 @@ func (srv *server) serveTemplate(w http.ResponseWriter, data interface{}, templa
 		return
 	}
 
-	err = t.Execute(w, data)
-	if err != nil {
+	if err := t.Execute(w, data); err != nil {
 		srv.log.Println(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 	}

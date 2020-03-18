@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/asankov/containerizor/internal/auth"
+
 	"github.com/asankov/containerizor/internal/db"
 
 	"github.com/asankov/containerizor/internal/db/postgres"
@@ -22,6 +24,7 @@ type server struct {
 	log          *log.Logger
 	orchestrator *containers.Orchestrator
 	db           db.Database
+	auth         *auth.Authenticator
 }
 
 func main() {
@@ -50,10 +53,13 @@ func run() error {
 		return fmt.Errorf("error while building db connection pool: %w", err)
 	}
 
+	authenticator := auth.NewAutheniticator("samolevski")
+
 	app := &server{
 		log:          log.New(os.Stdout, "", log.Ldate),
 		orchestrator: containers.NewOrchestrator(dockerClient),
 		db:           db,
+		auth:         authenticator,
 	}
 
 	srv := http.Server{

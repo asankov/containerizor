@@ -77,7 +77,15 @@ func (app *server) handleLogin() http.HandlerFunc {
 			return
 		}
 
-		w.Header().Add("Set-Cookie", "token=TODO")
+		token, err := app.auth.NewTokenForUser(username)
+		if err != nil {
+			http.Error(w, "internal error", 500)
+			return
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:  "token",
+			Value: token,
+		})
 		app.serveTemplate(w, nil, "./ui/html/list.page.tmpl", "./ui/html/base.layout.tmpl")
 	}
 }
